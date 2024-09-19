@@ -93,8 +93,8 @@ std::int32_t get_right_x() {
 
 void opcontrol() { 
 	// the function variables that describe whether the x or y values will be used to move.
-	std::function<int32_t()> left_input = get_left_y;
-	std::function<int32_t()> right_input = get_right_y;
+	std::function<std::int32_t()> left_input = get_left_y;
+	std::function<std::int32_t()> right_input = get_right_y;
 
 	while (true) {
 		// moves the motor groups based on the input functions.
