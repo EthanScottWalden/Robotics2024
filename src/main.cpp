@@ -62,8 +62,8 @@ pros::Controller master(pros::E_CONTROLLER_MASTER);
 
 // these are the motor groups for the left and right wheels.
 // each one is in the order of front wheel, middle wheel, back wheel.
-pros::MotorGroup left_mg({19, 20, 18});
-pros::MotorGroup right_mg({12, 11, 13});
+pros::MotorGroup left_mg({16, 15, 14, 13});
+pros::MotorGroup right_mg({-17, -18, -19, -20});
 
 // below are abstracted functions that get the analog values
 // for the controller. these exist so that they can be stored
@@ -71,44 +71,37 @@ pros::MotorGroup right_mg({12, 11, 13});
 // the current purpose of this is to implement both arcade and tank controls,
 // so the driver can get a feel for which one will make more sense for the robot.
 
-// gets analog left y voltage
-std::int32_t get_left_y() {
-	return master.get_analog(ANALOG_LEFT_Y);
+// tank control schemes for the robot.
+void tank_controls() {
+	left_mg.move(master.get_analog(ANALOG_LEFT_Y));
+	right_mg.move(master.get_analog(ANALOG_RIGHT_Y));
 }
 
-// gets analog left x voltage
-std::int32_t get_left_x() {
-	return master.get_analog(ANALOG_LEFT_X);
-}
+// arcade control schemes for the robot.
+void arcade_controls() {
+	std::int32_t left_y = master.get_analog(ANALOG_LEFT_Y);
+	std::int32_t right_x = master.get_analog(ANALOG_RIGHT_X);
 
-// gets analog right y voltage
-std::int32_t get_right_y() {
-	return master.get_analog(ANALOG_RIGHT_Y);
-}
-
-// gets analog left x voltage
-std::int32_t get_right_x() {
-	return master.get_analog(ANALOG_RIGHT_X);
+	left_mg.move(left_y + right_x);
+	right_mg.move(left_y - right_x);
 }
 
 void opcontrol() { 
-	// the function variables that describe whether the x or y values will be used to move.
-	std::function<std::int32_t()> left_input = get_left_y;
-	std::function<std::int32_t()> right_input = get_right_y;
+	// the function variable that will describe the current control scheme.
+	std::function<void()> controls = arcade_controls;
 
 	while (true) {
-		// moves the motor groups based on the input functions.
-		left_mg.move(left_input());
-		right_mg.move(right_input());
+		// moves the motor groups based on the current control scheme.
+		controls();
 
 		// switch to tank controls on A press.
 		if (master.get_digital(DIGITAL_A)) {
-			right_input = get_right_y;
+			controls = tank_controls;
 		}
 
 		// switch to arcade controls on B press.
 		if (master.get_digital(DIGITAL_B)) {
-			right_input = get_right_x;
+			controls = arcade_controls;
 		}
 
 		pros::delay(15);
